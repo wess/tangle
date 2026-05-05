@@ -1,0 +1,93 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: tangle
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tangle"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bun src/server.ts
+    environment:
+      PORT: "3000"
+      NODE_ENV: production
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/tangle
+      SECRET: ${SECRET}
+      # Bare git repos live on this volume. Pushes and clones write/read
+      # directly through the API process — there is no separate git
+      # service. Keep this on a persistent volume.
+      REPO_DIR: ${REPO_DIR:-/data/repos}
+      # Used when STORAGE_DRIVER=local. The named `blobs` volume below
+      # is mounted at /data/blobs unconditionally — empty / unused if
+      # you stay on the s3 driver.
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      STORAGE_LOCAL_DIR: ${STORAGE_LOCAL_DIR:-/data/blobs}
+      # Used when STORAGE_DRIVER=s3.
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-}
+      APP_URL: ${APP_URL:-http://localhost:3001}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM: ${RESEND_FROM:-Tangle <onboarding@resend.dev>}
+      RP_ID: ${RP_ID:-localhost}
+      RP_NAME: ${RP_NAME:-Tangle}
+      RP_ORIGIN: ${RP_ORIGIN:-http://localhost:3001}
+      # Trust X-Forwarded-For only when the request enters from the
+      # docker bridge — i.e. from the `web` service. Compose default
+      # networks live in 172.16.0.0/12.
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-172.16.0.0/12}
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-1073741824}
+    volumes:
+      - repos:/data/repos
+      - blobs:/data/blobs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bun src/web/serve.ts
+    environment:
+      WEB_PORT: "3001"
+      API_URL: http://api:3000
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      - web
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  caddydata:
+  caddyconfig:
+  repos:
+  blobs:

@@ -1,0 +1,42 @@
+# AI
+.omc
+docs/superpowers
+.envrc
+.claude
+CLAUDE.md
+
+# dependencies (bun install)
+node_modules
+
+# tangle local state (repos and blobs when STORAGE_DRIVER=local)
+.tangle
+
+# output
+out
+dist
+*.tgz
+
+# code coverage
+coverage
+*.lcov
+
+# logs
+logs
+*.log
+
+# dotenv
+.env
+.env.*
+!.env.example
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# IDE
+.idea
+.vscode
+
+# Finder (MacOS)
+.DS_Store
