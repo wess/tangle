@@ -53,3 +53,19 @@ export const resolveMcpUser = async (
   ) as { id: number; username: string; name: string; is_owner: boolean } | null
   return owner
 }
+
+// HTTP MCP path: bearer auth has already pinned a user id. Hydrate the
+// fields the tool layer expects (`username` for fork/create defaults,
+// `is_owner` for the `tangle.users.me` introspection tool).
+export const loadMcpUserById = async (
+  db: Connection,
+  id: number,
+): Promise<TangleMcpContext["user"]> => {
+  const row = await db.one(
+    from("users")
+      .where(q => q("id").equals(id))
+      .where(q => q("deleted_at").isNull())
+      .select("id", "username", "name", "is_owner"),
+  ) as { id: number; username: string; name: string; is_owner: boolean } | null
+  return row
+}

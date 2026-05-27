@@ -23,6 +23,8 @@ import { gitRoutes } from "./git/index.ts"
 import { browseRoutes } from "./browse/index.ts"
 import { labelRoutes } from "./labels/index.ts"
 import { healthRoutes } from "./health/index.ts"
+import { adminSettingsRoutes } from "./settings/index.ts"
+import { adminMcpRoutes, mcpRoutes } from "./mcp/http.ts"
 import { createStorage } from "./storage/index.ts"
 import { createEmailer } from "./email/index.ts"
 import { withSecurityHeaders } from "./security/headers.ts"
@@ -93,6 +95,9 @@ const fetch = router(
   ...browseRoutes(db, config.secret, repoDir),
   ...labelRoutes(db, config.secret),
   ...healthRoutes(db),
+  ...adminSettingsRoutes(db, config.secret),
+  ...mcpRoutes({ db, secret: config.secret, store, repoDir, appUrl: config.appUrl }),
+  ...adminMcpRoutes({ db, secret: config.secret, store, repoDir, appUrl: config.appUrl }),
 )
 
 // Periodic housekeeping. Each sweep is guarded so a slow run cannot
