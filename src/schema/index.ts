@@ -277,3 +277,11 @@ export const webauthnChallenges = defineSchema("webauthn_challenges", {
   expires_at: column.timestamp(),
   created_at: column.timestamp().default("now()"),
 })
+
+export const instanceSettings = defineSchema("instance_settings", {
+  key: column.text().primaryKey(),
+  value: column.text(),
+  updated_by: column.integer().nullable().ref("users", "id"),
+  updated_at: column.timestamp().default("now()"),
+  created_at: column.timestamp().default("now()"),
+})
