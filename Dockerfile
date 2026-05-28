@@ -1,10 +1,9 @@
 FROM oven/bun:1-alpine AS deps
 WORKDIR /app
 
-# Install workspace deps in a separate layer so source-only changes
-# don't blow the cache.
+# atlas is fetched via `bun install` from github:wess/atlas — needs git.
+RUN apk add --no-cache git
 COPY package.json bun.lock ./
-COPY libs/ ./libs/
 RUN bun install --frozen-lockfile --production
 
 FROM oven/bun:1-alpine AS runtime
@@ -26,7 +25,6 @@ LABEL org.opencontainers.image.title="Tangle" \
 RUN apk add --no-cache git
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/libs ./libs
 COPY package.json bun.lock ./
 COPY src/ ./src/
 COPY migrations/ ./migrations/
