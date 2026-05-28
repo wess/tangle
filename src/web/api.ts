@@ -82,6 +82,32 @@ export const loginMfa = async (mfaToken: string, opts: { code?: string; backupCo
 
 export const logout = () => setToken(null, null)
 
+// SSO callback redirects to `tangle.local/#token=<jwt>`. The SPA reads
+// that hash, hands the token to this function, which stores it and
+// fetches /me to populate the user record. Returns the AuthUser on
+// success, or null if /me rejected (revoked / expired token).
+export const adoptToken = async (t: string): Promise<AuthUser | null> => {
+  setToken(t)
+  try {
+    const data = await jsonReq("GET", "/me")
+    if (data?.id) {
+      const u: AuthUser = {
+        id: data.id,
+        email: data.email,
+        username: data.username,
+        name: data.name,
+        is_owner: !!data.is_owner,
+      }
+      setToken(t, u)
+      return u
+    }
+  } catch {
+    // fall through
+  }
+  setToken(null, null)
+  return null
+}
+
 export const getMe = () => jsonReq("GET", "/me")
 
 export const updateMe = (patch: { name?: string; email?: string; username?: string; bio?: string; discoverable?: boolean }) =>

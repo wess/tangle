@@ -1333,6 +1333,13 @@ const Explore = () => (
 const App = () => {
   const route = useRoute()
   const [user, setUser] = useState<api.AuthUser | null>(api.getUser())
+  // SSO callback redirects to /#token=<jwt>. Until we either adopt the
+  // token or know the URL doesn't carry one, suppress the unauthenticated
+  // → /login bounce below — otherwise we'd race the network call and
+  // briefly show the login screen.
+  const [adopting, setAdopting] = useState(() =>
+    typeof window !== "undefined" && window.location.hash.startsWith("#token="),
+  )
 
   const onAuthed = useCallback((u: api.AuthUser) => {
     setUser(u)
@@ -1344,12 +1351,35 @@ const App = () => {
     navigate("/login")
   }, [])
 
-  // Redirect rules: unauthenticated → /login (except /login, /signup);
-  // authenticated → / (when on /login or /signup).
+  // Adopt an SSO token off the URL fragment exactly once on mount. The
+  // token isn't in the path/search so it never hits the server logs or
+  // referer header — same convention stohr uses.
   useEffect(() => {
+    if (!adopting) return
+    const hash = window.location.hash
+    if (!hash.startsWith("#token=")) { setAdopting(false); return }
+    const t = decodeURIComponent(hash.slice("#token=".length))
+    if (!t) { setAdopting(false); return }
+    history.replaceState(null, "", window.location.pathname + window.location.search)
+    api.adoptToken(t)
+      .then(u => { if (u) setUser(u) })
+      .finally(() => setAdopting(false))
+  }, [adopting])
+
+  // Redirect rules: unauthenticated → /login (except /login, /signup);
+  // authenticated → / (when on /login or /signup). Wait until any SSO
+  // token adoption has finished so we don't flash the login screen mid-
+  // handoff.
+  useEffect(() => {
+    if (adopting) return
     if (!user && route.kind !== "auth") navigate("/login")
     if (user && route.kind === "auth") navigate("/")
-  }, [user, route])
+  }, [user, route, adopting])
+
+  // While we're adopting an SSO token off the URL hash, render nothing
+  // (a blank page is less jarring than a half-second flash of the login
+  // form before the API call resolves and we flip into the dashboard).
+  if (adopting) return null
 
   if (!user) {
     if (route.kind === "auth") return <AuthPage mode={route.mode} onAuthed={onAuthed} />
