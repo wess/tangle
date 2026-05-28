@@ -44,7 +44,17 @@ const buildSpa = async (): Promise<void> => {
 
 await buildSpa()
 
-const indexHtml = await Bun.file(join(DIST, "index.html")).text()
+// Bun.build emits `<script type="module" crossorigin src="…">` and the
+// matching crossorigin on <link rel="stylesheet">. The assets are same-
+// origin, so the attribute is gratuitous — Safari fetches them in CORS
+// mode, finds no Access-Control-Allow-Origin on the response, refuses to
+// execute the module, and falls back to a "do you want to download this"
+// prompt for the bundle file. Strip the attribute so Safari treats them
+// as ordinary same-origin loads.
+const indexHtml = (await Bun.file(join(DIST, "index.html")).text()).replace(
+  / crossorigin(?=[\s>])/g,
+  "",
+)
 
 // Repos live at /:owner/:name and /:owner/:name/<anything>. We don't want
 // to send index.html for asset paths or for the API, so this matcher only
