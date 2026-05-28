@@ -25,6 +25,7 @@ import { labelRoutes } from "./labels/index.ts"
 import { healthRoutes } from "./health/index.ts"
 import { adminSettingsRoutes } from "./settings/index.ts"
 import { adminMcpRoutes, mcpRoutes } from "./mcp/http.ts"
+import { castleRoutes } from "./castle/index.ts"
 import { createStorage } from "./storage/index.ts"
 import { createEmailer } from "./email/index.ts"
 import { withSecurityHeaders } from "./security/headers.ts"
@@ -53,6 +54,10 @@ const config = defineConfig({
   // also a memory ceiling per concurrent push. Git push packs come in
   // as one big body — sized to fit the largest pack we want to accept.
   maxUploadBytes: env("MAX_UPLOAD_BYTES", { parse: Number, default: String(1024 * 1024 * 1024) }),
+  // Opt-in M2M token for Castle (single-node homelab control plane). When
+  // set, /castle/* routes mount and accept this bearer for user provisioning.
+  // When empty, the integration is invisible and Tangle runs unchanged.
+  castleAdminToken: env("CASTLE_ADMIN_TOKEN", { default: "" }),
 })
 
 const db = connect({ driver: "postgres", url: config.databaseUrl })
@@ -98,6 +103,7 @@ const fetch = router(
   ...adminSettingsRoutes(db, config.secret),
   ...mcpRoutes({ db, secret: config.secret, store, repoDir, appUrl: config.appUrl }),
   ...adminMcpRoutes({ db, secret: config.secret, store, repoDir, appUrl: config.appUrl }),
+  ...castleRoutes(db, config.castleAdminToken),
 )
 
 // Periodic housekeeping. Each sweep is guarded so a slow run cannot
