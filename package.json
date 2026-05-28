@@ -1,6 +1,6 @@
 {
   "name": "tangle",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "private": true,
   "workspaces": [
@@ -34,6 +34,7 @@
     "@atlas/mcp": "workspace:*",
     "@atlas/migrate": "workspace:*",
     "@atlas/server": "workspace:*",
+    "@atlas/sso": "workspace:*",
     "@atlas/storage": "workspace:*",
     "@simplewebauthn/browser": "^13.3.0",
     "@simplewebauthn/server": "^13.3.0",

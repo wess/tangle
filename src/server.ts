@@ -26,6 +26,17 @@ import { healthRoutes } from "./health/index.ts"
 import { adminSettingsRoutes } from "./settings/index.ts"
 import { adminMcpRoutes, mcpRoutes } from "./mcp/http.ts"
 import { castleRoutes } from "./castle/index.ts"
+import { setupTangleSso } from "./sso/index.ts"
+
+const maybeSsoRoutes = async (db: any, cfg: { ssoIssuer: string; ssoClientId: string; ssoClientSecret: string; secret: string }) => {
+  if (!cfg.ssoIssuer || !cfg.ssoClientId || !cfg.ssoClientSecret) return []
+  return setupTangleSso(db, {
+    issuerUrl: cfg.ssoIssuer,
+    clientId: cfg.ssoClientId,
+    clientSecret: cfg.ssoClientSecret,
+    secret: cfg.secret,
+  })
+}
 import { createStorage } from "./storage/index.ts"
 import { createEmailer } from "./email/index.ts"
 import { withSecurityHeaders } from "./security/headers.ts"
@@ -58,6 +69,10 @@ const config = defineConfig({
   // set, /castle/* routes mount and accept this bearer for user provisioning.
   // When empty, the integration is invisible and Tangle runs unchanged.
   castleAdminToken: env("CASTLE_ADMIN_TOKEN", { default: "" }),
+  // OIDC SSO. All three required together; any missing → integration off.
+  ssoIssuer: env("SSO_ISSUER", { default: "" }),
+  ssoClientId: env("SSO_CLIENT_ID", { default: "" }),
+  ssoClientSecret: env("SSO_CLIENT_SECRET", { default: "" }),
 })
 
 const db = connect({ driver: "postgres", url: config.databaseUrl })
@@ -79,6 +94,8 @@ const emailer = createEmailer({
 })
 
 await migrate.up(db, "./migrations")
+
+const ssoRoutes = await maybeSsoRoutes(db, config)
 
 const fetch = router(
   ...authRoutes(db, config.secret),
@@ -104,6 +121,7 @@ const fetch = router(
   ...mcpRoutes({ db, secret: config.secret, store, repoDir, appUrl: config.appUrl }),
   ...adminMcpRoutes({ db, secret: config.secret, store, repoDir, appUrl: config.appUrl }),
   ...castleRoutes(db, config.castleAdminToken),
+  ...ssoRoutes,
 )
 
 // Periodic housekeeping. Each sweep is guarded so a slow run cannot
