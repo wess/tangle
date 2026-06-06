@@ -11,6 +11,7 @@ import {
   type SsoConfig,
 } from "@atlas/sso"
 import type { Conn } from "@atlas/server"
+import { get, json } from "@atlas/server"
 import { issueSession, revokeAllSessions } from "../security/sessions.ts"
 import { logEvent } from "../security/audit.ts"
 import { clientIp, userAgent } from "../security/ratelimit.ts"
@@ -132,3 +133,20 @@ export const setupTangleSso = async (
   }
   return mountSso(cfg)
 }
+
+// Always-mounted probe so the SPA can decide whether to render the
+// "Sign in with Castle" button. `available` mirrors the same all-or-
+// nothing env gate maybeSsoRoutes() uses in server.ts — any of the three
+// OIDC settings missing means the integration is off.
+export const ssoStatusRoutes = (cfg: {
+  ssoIssuer: string
+  ssoClientId: string
+  ssoClientSecret: string
+}) => [
+  get("/auth/sso/status", async (c) =>
+    json(c, 200, {
+      available: Boolean(cfg.ssoIssuer && cfg.ssoClientId && cfg.ssoClientSecret),
+      label: "Castle",
+    }),
+  ),
+]

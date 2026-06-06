@@ -7,7 +7,7 @@ import { apiError } from "../util/errors.ts"
 
 const authId = (c: any) => (c.assigns.auth as { id: number }).id
 
-const VALID_EVENTS = new Set(["push", "issues", "pull_request", "release", "star"])
+const VALID_EVENTS = new Set(["push", "issues", "pull_request", "release", "star", "status"])
 const validateEvents = (events: unknown): string[] | null => {
   if (!Array.isArray(events)) return null
   if (events.length === 0) return null

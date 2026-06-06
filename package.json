@@ -1,6 +1,6 @@
 {
   "name": "tangle",
-  "version": "0.1.9",
+  "version": "0.1.12",
   "type": "module",
   "private": true,
   "scripts": {
@@ -9,12 +9,14 @@
     "web": "bun --hot src/web/serve.ts",
     "mcp": "bun src/mcp/serve.ts",
     "test": "bun test --concurrency=1 tests/",
-    "lint": "bunx biome lint packages/",
-    "format": "bunx biome format packages/",
-    "check": "bunx biome check packages/",
-    "lint:fix": "bunx biome lint --write packages/",
-    "format:fix": "bunx biome format --write packages/",
-    "check:fix": "bunx biome check --write packages/",
+    "typecheck": "tsc --noEmit",
+    "build": "bun run typecheck",
+    "lint": "bunx biome lint src/",
+    "format": "bunx biome format src/",
+    "check": "bunx biome check src/",
+    "lint:fix": "bunx biome lint --write src/",
+    "format:fix": "bunx biome format --write src/",
+    "check:fix": "bunx biome check --write src/",
     "tidy": "bun run format:fix && bun run lint:fix"
   },
   "devDependencies": {

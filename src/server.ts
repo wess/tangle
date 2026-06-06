@@ -17,16 +17,18 @@ import { pullRoutes } from "./pulls/index.ts"
 import { commentRoutes } from "./comments/index.ts"
 import { starRoutes } from "./stars/index.ts"
 import { releaseRoutes } from "./releases/index.ts"
+import { statusRoutes } from "./statuses/index.ts"
 import { webhookRoutes } from "./webhooks/index.ts"
 import { inviteRoutes } from "./invites/index.ts"
 import { gitRoutes } from "./git/index.ts"
 import { browseRoutes } from "./browse/index.ts"
+import { searchRoutes } from "./search/index.ts"
 import { labelRoutes } from "./labels/index.ts"
 import { healthRoutes } from "./health/index.ts"
 import { adminSettingsRoutes } from "./settings/index.ts"
 import { adminMcpRoutes, mcpRoutes } from "./mcp/http.ts"
 import { castleRoutes } from "./castle/index.ts"
-import { setupTangleSso } from "./sso/index.ts"
+import { setupTangleSso, ssoStatusRoutes } from "./sso/index.ts"
 
 const maybeSsoRoutes = async (db: any, cfg: { ssoIssuer: string; ssoClientId: string; ssoClientSecret: string; secret: string }) => {
   if (!cfg.ssoIssuer || !cfg.ssoClientId || !cfg.ssoClientSecret) return []
@@ -111,16 +113,19 @@ const fetch = router(
   ...commentRoutes(db, config.secret),
   ...starRoutes(db, config.secret),
   ...releaseRoutes(db, config.secret, store),
+  ...statusRoutes(db, config.secret),
   ...webhookRoutes(db, config.secret),
   ...inviteRoutes(db, config.secret),
   ...gitRoutes(db, repoDir),
   ...browseRoutes(db, config.secret, repoDir),
+  ...searchRoutes(db, config.secret, repoDir),
   ...labelRoutes(db, config.secret),
   ...healthRoutes(db),
   ...adminSettingsRoutes(db, config.secret),
   ...mcpRoutes({ db, secret: config.secret, store, repoDir, appUrl: config.appUrl }),
   ...adminMcpRoutes({ db, secret: config.secret, store, repoDir, appUrl: config.appUrl }),
   ...castleRoutes(db, config.castleAdminToken),
+  ...ssoStatusRoutes(config),
   ...ssoRoutes,
 )
 

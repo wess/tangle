@@ -12,6 +12,7 @@ import {
   Github,
   HelpCircle,
   KeyRound,
+  Menu,
   Moon,
   PanelLeft,
   Plus,
@@ -136,6 +137,7 @@ const AuthPage = ({ mode, onAuthed }: { mode: "login" | "signup"; onAuthed: (use
   const [needsSetup, setNeedsSetup] = useState<boolean | null>(null)
   const [mfaToken, setMfaToken] = useState<string | null>(null)
   const [mfaCode, setMfaCode] = useState("")
+  const [ssoAvailable, setSsoAvailable] = useState(false)
 
   // Leave `needsSetup` as null on error so the form doesn't lie about
   // whether an invite is required when we genuinely couldn't reach the
@@ -143,6 +145,12 @@ const AuthPage = ({ mode, onAuthed }: { mode: "login" | "signup"; onAuthed: (use
   // the user can retry once the API is back up.
   useEffect(() => {
     api.getSetupStatus().then(s => setNeedsSetup(s.needsSetup)).catch(() => setNeedsSetup(null))
+  }, [])
+
+  // Probe the SSO status endpoint so we only show the Castle button when
+  // the instance actually has OIDC wired up. Off by default on any error.
+  useEffect(() => {
+    api.ssoStatus().then(s => setSsoAvailable(s.available)).catch(() => setSsoAvailable(false))
   }, [])
 
   const submit = async (e: React.FormEvent) => {
@@ -183,6 +191,18 @@ const AuthPage = ({ mode, onAuthed }: { mode: "login" | "signup"; onAuthed: (use
       )}
       {mode === "signup" && needsSetup === true && (
         <div className="ok">First signup creates the instance owner — no invite needed.</div>
+      )}
+      {!mfaToken && mode === "login" && ssoAvailable && (
+        <>
+          <button
+            type="button"
+            className="primary"
+            onClick={() => { window.location.href = "/auth/sso/login" }}
+          >
+            🏰 Sign in with Castle
+          </button>
+          <div className="or-divider"><span>or</span></div>
+        </>
       )}
       <form onSubmit={submit}>
         {mfaToken ? (
@@ -270,7 +290,15 @@ const Shell = ({ user, route, onLogout, children }: { user: api.AuthUser; route:
     try { return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1" } catch { return false }
   })
   const [helpOpen, setHelpOpen] = useState(false)
+  // Off-canvas sidebar drawer on phones. Shown via the hamburger in the
+  // mobile top bar; the .open modifier and .scrim only matter inside the
+  // max-width:640px media query — desktop ignores both.
+  const [menuOpen, setMenuOpen] = useState(false)
   const helpRef = useRef<HTMLDivElement>(null)
+
+  // Close the drawer whenever the route changes so tapping a nav item
+  // doesn't leave it hanging open over the freshly-navigated page.
+  useEffect(() => { setMenuOpen(false) }, [route])
 
   // Click-outside / Escape closes the help dropdown — same affordance
   // stohr uses, so the gesture transfers between apps in the suite.
@@ -310,7 +338,20 @@ const Shell = ({ user, route, onLogout, children }: { user: api.AuthUser; route:
 
   return (
     <div className={`shell${collapsed ? " collapsed" : ""}`}>
-      <aside className="sidebar">
+      <div className="mobile-topbar">
+        <button
+          type="button"
+          className="hamburger"
+          onClick={() => setMenuOpen(true)}
+          title="Open menu"
+          aria-label="Open menu"
+        >
+          <Menu size={20} strokeWidth={1.75} />
+        </button>
+        <span className="wordmark">Tangle</span>
+      </div>
+      {menuOpen && <div className="scrim" onClick={() => setMenuOpen(false)} />}
+      <aside className={`sidebar${menuOpen ? " open" : ""}`}>
         <div className="sidebar-head">
           <div className="brand"><span className="wordmark">Tangle</span></div>
           <button
@@ -579,9 +620,95 @@ const RepoCode = ({ repo, sub }: { repo: api.Repo; sub?: string }) => {
   const ref = params.get("ref") ?? repo.default_branch
   const view = params.get("view") ?? "tree"
 
+  const q = params.get("q") ?? ""
+
+  if (view === "search" && q) return <RepoSearch repo={repo} ref_={ref} query={q} />
   if (view === "blob" && path) return <RepoBlob repo={repo} ref_={ref} path={path} />
   if (sub === "commits") return <RepoCommits repo={repo} ref_={ref} />
   return <RepoTree repo={repo} ref_={ref} path={path} cloneUrl={url} />
+}
+
+const navigateRepoSearch = (repo: api.Repo, ref: string, query: string) => {
+  const qs = new URLSearchParams()
+  if (ref !== repo.default_branch) qs.set("ref", ref)
+  qs.set("view", "search")
+  qs.set("q", query)
+  navigate(`/${repo.owner_login}/${repo.name}?${qs.toString()}`)
+}
+
+// A compact search box matching the file-tree header styling. Submitting
+// navigates to `?view=search&q=…` so the result page is bookmarkable and
+// back/forward works, exactly like the tree/blob views.
+const RepoSearchBox = ({ repo, ref_, initial }: { repo: api.Repo; ref_: string; initial: string }) => {
+  const [q, setQ] = useState(initial)
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = q.trim()
+    if (trimmed) navigateRepoSearch(repo, ref_, trimmed)
+  }
+  return (
+    <form className="repo-search" onSubmit={submit} style={{ display: "flex", gap: 8, marginTop: 14 }}>
+      <input
+        value={q}
+        onChange={e => setQ(e.target.value)}
+        placeholder={`Search code in ${repo.name}…`}
+        aria-label="Search code"
+        style={{ flex: 1 }}
+      />
+      <button className="primary" type="submit">Search</button>
+    </form>
+  )
+}
+
+const RepoSearch = ({ repo, ref_, query }: { repo: api.Repo; ref_: string; query: string }) => {
+  const [result, setResult] = useState<api.SearchResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    setResult(null); setError(null)
+    const controller = new AbortController()
+    api.searchCode(repo.owner_login, repo.name, query, ref_, controller.signal)
+      .then(r => {
+        if ((r as any).error) { setError((r as any).error); return }
+        setResult(r)
+      })
+      .catch(e => { if (!controller.signal.aborted) setError(String(e)) })
+    return () => controller.abort()
+  }, [repo.owner_login, repo.name, ref_, query])
+
+  return (
+    <>
+      <RepoSearchBox repo={repo} ref_={ref_} initial={query} />
+      {error && <div className="error-banner">{error}</div>}
+      {!result && !error && <div className="empty">Searching…</div>}
+      {result && result.files.length === 0 && (
+        <div className="empty"><p>No matches for “{query}”.</p></div>
+      )}
+      {result && result.files.length > 0 && (
+        <>
+          <p className="muted" style={{ marginTop: 14 }}>
+            {result.total_lines} match{result.total_lines === 1 ? "" : "es"} in {result.total_files} file{result.total_files === 1 ? "" : "s"}
+            {result.truncated ? " (results truncated)" : ""}
+          </p>
+          {result.files.map(f => (
+            <div className="file-tree" key={f.file} style={{ marginTop: 10 }}>
+              <div className="file-tree-head">
+                <FileIcon size={14} strokeWidth={1.75} />
+                <span
+                  style={{ cursor: "pointer" }}
+                  onClick={() => navigateRepoPath(repo, ref_, f.file, "blob")}
+                >
+                  {f.file}
+                </span>
+              </div>
+              <pre className="code" style={{ margin: 0, borderRadius: 0 }}>
+                {f.hits.map(h => `${h.line}: ${h.text}`).join("\n")}
+              </pre>
+            </div>
+          ))}
+        </>
+      )}
+    </>
+  )
 }
 
 const navigateRepoPath = (repo: api.Repo, ref: string, path: string, view: "tree" | "blob") => {
@@ -619,6 +746,8 @@ const RepoTree = ({ repo, ref_, path, cloneUrl }: { repo: api.Repo; ref_: string
         <p className="muted">Use a personal access token as the password for HTTP. Generate one in <Link to="/settings/tokens">Settings → Tokens</Link>.</p>
         <pre className="code">{`git clone ${cloneUrl}`}</pre>
       </div>
+
+      <RepoSearchBox repo={repo} ref_={ref_} initial="" />
 
       {error && <div className="error-banner">{error}</div>}
       {tree?.empty
@@ -954,7 +1083,7 @@ const NewPull = ({ repo }: { repo: api.Repo }) => {
       {error && <div className="error-banner">{error}</div>}
       {!refs ? <div className="empty">Loading branches…</div> : (
         <form className="form" onSubmit={submit}>
-          <label>Compare<div className="row">
+          <label>Compare<div className="row compare-row">
             <select value={head} onChange={e => setHead(e.target.value)} style={{ flex: 1 }}>
               {refs.branches.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
             </select>
@@ -1219,7 +1348,7 @@ const SshKeySettings = () => {
         <h3>Your keys</h3>
         {keys.length === 0
           ? <p className="muted">No keys yet.</p>
-          : <table className="list">
+          : <div className="table-scroll"><table className="list">
             <thead><tr><th>Title</th><th>Type</th><th>Fingerprint</th><th></th></tr></thead>
             <tbody>{keys.map(k => (
               <tr key={k.id}>
@@ -1229,7 +1358,7 @@ const SshKeySettings = () => {
                 <td><button className="danger" onClick={async () => { await api.removeSshKey(k.id); reload() }}>Remove</button></td>
               </tr>
             ))}</tbody>
-          </table>}
+          </table></div>}
       </div>
     </>
   )
@@ -1276,7 +1405,7 @@ const TokenSettings = () => {
         <h3>Active tokens</h3>
         {apps.length === 0
           ? <p className="muted">No tokens.</p>
-          : <table className="list">
+          : <div className="table-scroll"><table className="list">
             <thead><tr><th>Name</th><th>Prefix</th><th>Scopes</th><th>Last used</th><th></th></tr></thead>
             <tbody>{apps.map(a => (
               <tr key={a.id}>
@@ -1287,7 +1416,7 @@ const TokenSettings = () => {
                 <td><button className="danger" onClick={async () => { await api.revokeApp(a.id); reload() }}>Revoke</button></td>
               </tr>
             ))}</tbody>
-          </table>}
+          </table></div>}
       </div>
     </>
   )

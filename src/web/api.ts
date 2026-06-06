@@ -41,6 +41,14 @@ export const getSetupStatus = async () => {
   return res.json() as Promise<{ needsSetup: boolean }>
 }
 
+// Whether the OIDC SSO ("Sign in with Castle") integration is configured.
+// Always reachable — the route mounts unconditionally so the login form
+// can decide whether to show the button.
+export const ssoStatus = async () => {
+  const res = await fetch(`${BASE}/auth/sso/status`)
+  return res.json() as Promise<{ available: boolean; label: string }>
+}
+
 export const signup = async (input: {
   name: string
   username: string
@@ -307,6 +315,30 @@ export const getReadme = (owner: string, name: string, ref?: string) => {
     text: string | null
     html: string | null
   }>
+}
+
+// ─── Code search (git grep) ────────────────────────────────────────
+
+export type SearchHit = { line: number; text: string }
+export type SearchFile = { file: string; hits: SearchHit[] }
+export type SearchResult = {
+  query: string
+  ref: string
+  commit: string
+  files: SearchFile[]
+  total_lines: number
+  total_files: number
+  truncated: boolean
+}
+
+export const searchCode = (owner: string, name: string, q: string, ref?: string, signal?: AbortSignal) => {
+  const qs = `?q=${encodeURIComponent(q)}${ref ? `&ref=${encodeURIComponent(ref)}` : ""}`
+  return jsonReq(
+    "GET",
+    `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(name)}/search${qs}`,
+    undefined,
+    signal,
+  ) as Promise<SearchResult>
 }
 
 // ─── Pulls (diff + merge + create) ─────────────────────────────────

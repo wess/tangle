@@ -15,7 +15,7 @@ export const users = defineSchema("users", {
   totp_backup_codes: column.text().nullable(),
   totp_enabled_at: column.timestamp().nullable(),
   deleted_at: column.timestamp().nullable(),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const sessions = defineSchema("sessions", {
@@ -25,14 +25,14 @@ export const sessions = defineSchema("sessions", {
   user_agent: column.text().nullable(),
   expires_at: column.timestamp(),
   revoked_at: column.timestamp().nullable(),
-  last_used_at: column.timestamp().default("now()"),
-  created_at: column.timestamp().default("now()"),
+  last_used_at: column.timestamp(),
+  created_at: column.timestamp(),
 })
 
 export const rateLimits = defineSchema("rate_limits", {
   bucket: column.text().primaryKey(),
   count: column.integer().default(0),
-  window_started_at: column.timestamp().default("now()"),
+  window_started_at: column.timestamp(),
 })
 
 export const auditEvents = defineSchema("audit_events", {
@@ -42,7 +42,7 @@ export const auditEvents = defineSchema("audit_events", {
   metadata: column.text().nullable(),
   ip: column.text().nullable(),
   user_agent: column.text().nullable(),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const invites = defineSchema("invites", {
@@ -52,7 +52,7 @@ export const invites = defineSchema("invites", {
   invited_by: column.integer().nullable().ref("users", "id"),
   used_at: column.timestamp().nullable(),
   used_by: column.integer().nullable().ref("users", "id"),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const apps = defineSchema("apps", {
@@ -64,7 +64,7 @@ export const apps = defineSchema("apps", {
   token_prefix: column.text(),
   scopes: column.text().default("repo"),
   last_used_at: column.timestamp().nullable(),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const passwordResets = defineSchema("password_resets", {
@@ -74,7 +74,7 @@ export const passwordResets = defineSchema("password_resets", {
   expires_at: column.timestamp(),
   used_at: column.timestamp().nullable(),
   ip: column.text().nullable(),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const orgs = defineSchema("orgs", {
@@ -84,7 +84,7 @@ export const orgs = defineSchema("orgs", {
   description: column.text().nullable(),
   avatar_key: column.text().nullable(),
   created_by: column.integer().nullable().ref("users", "id"),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const orgMembers = defineSchema("org_members", {
@@ -92,7 +92,7 @@ export const orgMembers = defineSchema("org_members", {
   org_id: column.integer().ref("orgs", "id"),
   user_id: column.integer().ref("users", "id"),
   role: column.text().default("member"),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const sshKeys = defineSchema("ssh_keys", {
@@ -103,7 +103,7 @@ export const sshKeys = defineSchema("ssh_keys", {
   public_key: column.text(),
   fingerprint: column.text().unique(),
   last_used_at: column.timestamp().nullable(),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const repos = defineSchema("repos", {
@@ -118,11 +118,11 @@ export const repos = defineSchema("repos", {
   is_archived: column.boolean().default(false),
   is_template: column.boolean().default(false),
   fork_of: column.integer().nullable().ref("repos", "id"),
-  size_bytes: column.bigint().default(0),
+  size_bytes: column.bigint().default(0n),
   star_count: column.integer().default(0),
   pushed_at: column.timestamp().nullable(),
   deleted_at: column.timestamp().nullable(),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
   mirror_url: column.text().nullable(),
   mirror_last_synced_at: column.timestamp().nullable(),
   mirror_last_error: column.text().nullable(),
@@ -135,7 +135,7 @@ export const repoCollaborators = defineSchema("repo_collaborators", {
   email: column.text().nullable(),
   role: column.text().default("reader"),
   invited_by: column.integer().nullable().ref("users", "id"),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
   accepted_at: column.timestamp().nullable(),
 })
 
@@ -150,8 +150,8 @@ export const issues = defineSchema("issues", {
   closed_at: column.timestamp().nullable(),
   closed_by: column.integer().nullable().ref("users", "id"),
   comment_count: column.integer().default(0),
-  created_at: column.timestamp().default("now()"),
-  updated_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
+  updated_at: column.timestamp(),
 })
 
 export const pulls = defineSchema("pulls", {
@@ -171,8 +171,8 @@ export const pulls = defineSchema("pulls", {
   closed_at: column.timestamp().nullable(),
   closed_by: column.integer().nullable().ref("users", "id"),
   comment_count: column.integer().default(0),
-  created_at: column.timestamp().default("now()"),
-  updated_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
+  updated_at: column.timestamp(),
 })
 
 export const comments = defineSchema("comments", {
@@ -182,7 +182,7 @@ export const comments = defineSchema("comments", {
   user_id: column.integer().nullable().ref("users", "id"),
   body: column.text(),
   edited_at: column.timestamp().nullable(),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const labels = defineSchema("labels", {
@@ -191,7 +191,7 @@ export const labels = defineSchema("labels", {
   name: column.text(),
   color: column.text().default("5E81AC"),
   description: column.text().nullable(),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const labelAssignments = defineSchema("label_assignments", {
@@ -199,14 +199,14 @@ export const labelAssignments = defineSchema("label_assignments", {
   label_id: column.integer().ref("labels", "id"),
   subject_kind: column.text(),
   subject_id: column.integer(),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const stars = defineSchema("stars", {
   id: column.serial().primaryKey(),
   user_id: column.integer().ref("users", "id"),
   repo_id: column.integer().ref("repos", "id"),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const releases = defineSchema("releases", {
@@ -220,7 +220,7 @@ export const releases = defineSchema("releases", {
   is_prerelease: column.boolean().default(false),
   user_id: column.integer().nullable().ref("users", "id"),
   published_at: column.timestamp().nullable(),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const releaseAssets = defineSchema("release_assets", {
@@ -232,7 +232,7 @@ export const releaseAssets = defineSchema("release_assets", {
   storage_key: column.text(),
   download_count: column.integer().default(0),
   uploaded_by: column.integer().nullable().ref("users", "id"),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const webhooks = defineSchema("webhooks", {
@@ -244,7 +244,7 @@ export const webhooks = defineSchema("webhooks", {
   events: column.text().default('["push"]'),
   active: column.boolean().default(true),
   created_by: column.integer().nullable().ref("users", "id"),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const webhookDeliveries = defineSchema("webhook_deliveries", {
@@ -255,7 +255,7 @@ export const webhookDeliveries = defineSchema("webhook_deliveries", {
   status_code: column.integer().nullable(),
   response_body: column.text().nullable(),
   duration_ms: column.integer().nullable(),
-  delivered_at: column.timestamp().default("now()"),
+  delivered_at: column.timestamp(),
 })
 
 export const webauthnCredentials = defineSchema("webauthn_credentials", {
@@ -263,11 +263,11 @@ export const webauthnCredentials = defineSchema("webauthn_credentials", {
   user_id: column.integer().ref("users", "id"),
   credential_id: column.text().unique(),
   public_key: column.text(),
-  counter: column.bigint().default(0),
+  counter: column.bigint().default(0n),
   transports: column.text().default("[]"),
   name: column.text().nullable(),
   last_used_at: column.timestamp().nullable(),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const webauthnChallenges = defineSchema("webauthn_challenges", {
@@ -275,13 +275,13 @@ export const webauthnChallenges = defineSchema("webauthn_challenges", {
   user_id: column.integer().nullable().ref("users", "id"),
   kind: column.text(),
   expires_at: column.timestamp(),
-  created_at: column.timestamp().default("now()"),
+  created_at: column.timestamp(),
 })
 
 export const instanceSettings = defineSchema("instance_settings", {
   key: column.text().primaryKey(),
   value: column.text(),
   updated_by: column.integer().nullable().ref("users", "id"),
-  updated_at: column.timestamp().default("now()"),
-  created_at: column.timestamp().default("now()"),
+  updated_at: column.timestamp(),
+  created_at: column.timestamp(),
 })

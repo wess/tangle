@@ -12,7 +12,7 @@ import { from } from "@atlas/db"
 // computed over the exact request body the receiver gets. This matches
 // the GitHub convention so existing receivers can drop in.
 
-export type WebhookEvent = "push" | "issues" | "pull_request" | "release" | "star"
+export type WebhookEvent = "push" | "issues" | "pull_request" | "release" | "star" | "status"
 
 type WebhookRow = {
   id: number
@@ -25,10 +25,10 @@ type WebhookRow = {
 
 const DELIVERY_TIMEOUT_MS = 10_000
 
-const sign = (secret: string, body: string): string =>
+export const sign = (secret: string, body: string): string =>
   "sha256=" + createHmac("sha256", secret).update(body).digest("hex")
 
-const buildBody = (contentType: string, payload: unknown): string => {
+export const buildBody = (contentType: string, payload: unknown): string => {
   if (contentType === "application/x-www-form-urlencoded") {
     // GitHub-style: the JSON sits inside a `payload=` form field.
     const params = new URLSearchParams()

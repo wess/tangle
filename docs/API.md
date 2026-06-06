@@ -100,6 +100,21 @@ The same shape exists at `/pulls/:number/...` for pull-request comments.
 | DELETE | `/repos/:owner/:name/releases/:id`                  | yes  | Writer-only. |
 | POST   | `/repos/:owner/:name/releases/:id/assets`           | yes  | `multipart/form-data` with a single `file` field. |
 
+## Commit statuses
+
+GitHub-compatible commit statuses. External CI/CD (e.g. Kettle) posts a state per
+`(sha, context)`; the combined status rolls them up to a single green/red signal.
+
+| Method | Path                                              | Auth | Notes |
+|--------|---------------------------------------------------|------|-------|
+| POST   | `/repos/:owner/:name/statuses/:sha`               | yes  | Writer-only. `{ state, context?, description?, target_url? }`. Re-posting the same `context` updates it in place. |
+| GET    | `/repos/:owner/:name/commits/:sha/statuses`       | yes  | Individual statuses (latest per context). |
+| GET    | `/repos/:owner/:name/commits/:sha/status`         | yes  | Combined: `{ sha, state, total_count, statuses }`. |
+
+`state` is one of `pending`, `success`, `failure`, `error`. Combined rollup: any
+`failure`/`error` → `failure`, else any `pending` (or none) → `pending`, else `success`.
+Posting a status fires the `status` webhook event.
+
 ## SSH keys
 
 | Method | Path                | Auth | Notes |

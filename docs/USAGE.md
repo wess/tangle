@@ -84,7 +84,7 @@ If you set an email on the invite, only that email can redeem it. Leave it blank
 
 ## Webhooks
 
-Settings → Webhooks → Add webhook on any repo. Tangle fires `push`, `issues`, `pull_request`, `release`, `star` events with HMAC-SHA256 signatures (`X-Tangle-Signature: sha256=…`).
+Settings → Webhooks → Add webhook on any repo. Tangle fires `push`, `issues`, `pull_request`, `release`, `star`, `status` events with HMAC-SHA256 signatures (`X-Tangle-Signature: sha256=…`).
 
 The delivery log (Webhooks → click into one → Recent deliveries) shows status code, response body, and latency for the last 50 attempts.
 
