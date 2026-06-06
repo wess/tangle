@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Documentation — Tangle</title>
+    <meta name="description" content="Documentation for Tangle: quickstart, common workflows, architecture, the JSON API, the MCP server, configuration, deployment, and contributing." />
+    <link rel="stylesheet" href="styles.css" />
+    <style>:root{--accent:#88c0d0;--accent2:#5e81ac}</style>
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="wrap">
+        <a class="brand" href="index.html"><span class="mark">⎇</span> Tangle</a>
+        <button class="navtoggle" aria-label="Menu" data-nav>☰</button>
+        <div class="navlinks" data-navlinks>
+          <a href="index.html#features">Features</a>
+          <a href="index.html#architecture">Architecture</a>
+          <a href="docs.html">Docs</a>
+          <a class="btn primary" href="https://github.com/wess/tangle">GitHub</a>
+        </div>
+      </div>
+    </nav>
+
+    <header class="dochero">
+      <div class="wrap">
+        <div class="eyebrow">Documentation</div>
+        <h2 style="font-size: clamp(28px, 5vw, 40px); font-weight: 800; letter-spacing: -0.02em">Everything about Tangle.</h2>
+        <p class="sub">
+          The full reference lives as Markdown in the <code>docs/</code> folder. Start with the quickstart, then dive into
+          the common workflows and the architecture. Each card links straight to the source document.
+        </p>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <div class="docsection">Get going</div>
+      <div class="docgrid">
+        <a class="doccard" href="../docs/README.md">
+          <div class="t"><span class="ico">📖</span> Overview</div>
+          <p>The doc map: what Tangle is and where everything lives.</p>
+        </a>
+        <a class="doccard" href="../docs/QUICKSTART.md">
+          <div class="t"><span class="ico">🚀</span> Quickstart</div>
+          <p>From zero to first push, walked through step by step.</p>
+        </a>
+        <a class="doccard" href="../docs/USAGE.md">
+          <div class="t"><span class="ico">🧰</span> Common workflows</div>
+          <p>Opening PRs, mirroring upstream, running the MCP, and more.</p>
+        </a>
+      </div>
+
+      <div class="docsection">Understand it</div>
+      <div class="docgrid">
+        <a class="doccard" href="../docs/ARCHITECTURE.md">
+          <div class="t"><span class="ico">🏗️</span> Architecture</div>
+          <p>The data model, request pipeline, and where the bytes live.</p>
+        </a>
+        <a class="doccard" href="../docs/CONFIGURATION.md">
+          <div class="t"><span class="ico">⚙️</span> Configuration</div>
+          <p>Every environment variable Tangle reads, explained.</p>
+        </a>
+        <a class="doccard" href="../docs/TROUBLESHOOTING.md">
+          <div class="t"><span class="ico">🔧</span> Troubleshooting</div>
+          <p>Common snags and how to get yourself unstuck.</p>
+        </a>
+      </div>
+
+      <div class="docsection">Reference &amp; integrations</div>
+      <div class="docgrid">
+        <a class="doccard" href="../docs/API.md">
+          <div class="t"><span class="ico">🔗</span> API reference</div>
+          <p>Every JSON endpoint Tangle exposes — the full contract.</p>
+        </a>
+        <a class="doccard" href="../docs/MCP.md">
+          <div class="t"><span class="ico">🤖</span> MCP server</div>
+          <p>Wire it into Claude Code or any MCP-aware host — 32 tools.</p>
+        </a>
+      </div>
+
+      <div class="docsection">Operations &amp; contributing</div>
+      <div class="docgrid">
+        <a class="doccard" href="../docs/DEPLOY.md">
+          <div class="t"><span class="ico">📦</span> Deploy</div>
+          <p>Going to production with Compose and Caddy + TLS.</p>
+        </a>
+        <a class="doccard" href="../docs/CONTRIBUTING.md">
+          <div class="t"><span class="ico">💻</span> Contributing</div>
+          <p>How to file issues and PRs against Tangle itself.</p>
+        </a>
+        <a class="doccard" href="https://github.com/wess/tangle">
+          <div class="t"><span class="ico">⭐</span> Source</div>
+          <p>The full source, issues, and releases on GitHub.</p>
+        </a>
+      </div>
+    </main>
+
+    <footer style="margin-top: 60px">
+      <div class="wrap">
+        <a class="brand" href="index.html"><span class="mark">⎇</span> Tangle</a>
+        <div class="links">
+          <a href="index.html">Home</a>
+          <a href="../docs/README.md">Docs source</a>
+          <a href="https://github.com/wess/tangle">GitHub</a>
+          <a href="https://github.com/wess/atlas">Atlas</a>
+        </div>
+        <span>MIT · © 2026</span>
+      </div>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>

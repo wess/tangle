@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tangle — a self-hosted git server for your home lab</title>
+    <meta
+      name="description"
+      content="Tangle is a delightful, self-hosted git server that fits in docker compose up — repositories, issues, pull requests, releases, webhooks, and an MCP server for your AI assistant. MIT licensed, no telemetry."
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <style>:root{--accent:#88c0d0;--accent2:#5e81ac}</style>
+  </head>
+  <body>
+    <!-- nav -->
+    <nav class="nav">
+      <div class="wrap">
+        <a class="brand" href="index.html"><span class="mark">⎇</span> Tangle</a>
+        <button class="navtoggle" aria-label="Menu" data-nav>☰</button>
+        <div class="navlinks" data-navlinks>
+          <a href="#features">Features</a>
+          <a href="#architecture">Architecture</a>
+          <a href="docs.html">Docs</a>
+          <a class="btn primary" href="https://github.com/wess/tangle">GitHub</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- hero -->
+    <header class="hero">
+      <div class="wrap">
+        <span class="pill"><span class="dot"></span> Self-hosted · MIT licensed · built on Atlas</span>
+        <h1>A git server <span class="accent">for your home lab</span>.</h1>
+        <p class="lead">
+          GitHub-style code hosting that fits in <code>docker compose up</code> — issues, pull requests, releases,
+          webhooks, an MCP server for your AI assistant, and a sidebar that doesn't look like it was thrown together in
+          2009. Two processes, one Postgres, your data on your disk.
+        </p>
+        <div class="cta">
+          <a class="btn primary" href="#start">Get started</a>
+          <a class="btn ghost" href="https://github.com/wess/tangle">View on GitHub →</a>
+        </div>
+
+        <!-- terminal mockup -->
+        <div class="mock">
+          <div class="bar">
+            <span class="hash">$</span><span>tangle</span>
+            <span class="muted" style="font-size: 13px">· localhost</span>
+            <span class="dots"><i></i><i></i><i></i></span>
+          </div>
+          <div class="body">
+            <div class="msg human">
+              <div class="av">🧑</div>
+              <div>
+                <div class="who">You</div>
+                <div class="txt">git clone http://localhost:3000/me/notes.git</div>
+              </div>
+            </div>
+            <div class="msg">
+              <div class="av" style="background: linear-gradient(135deg, #88c0d0, #5e81ac)">⎇</div>
+              <div>
+                <div class="who">Tangle <small>smart-http · port 3000</small></div>
+                <div class="txt">Enumerating objects: 128, done. Receiving objects: 100%…</div>
+              </div>
+            </div>
+            <div class="msg">
+              <div class="av">🔀</div>
+              <div>
+                <div class="who">Pull request <small>#7 · fast-forward</small></div>
+                <div class="txt">add caching layer → <span class="men">main</span> · color-coded diff, ready to merge.</div>
+              </div>
+            </div>
+            <div class="msg">
+              <div class="av" style="background: linear-gradient(135deg, #88c0d0, #5e81ac)">🤖</div>
+              <div>
+                <div class="who">MCP server <small>32 tools</small></div>
+                <div class="typing"><i></i><i></i><i></i> your AI assistant is opening a PR</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- features -->
+    <section class="block" id="features">
+      <div class="wrap">
+        <div class="eyebrow">What's inside</div>
+        <h2>Everything you expect from a code host, sized for one box.</h2>
+        <p class="sub">Repositories, collaboration, releases, automation — and an MCP server so your AI assistant can drive it all.</p>
+        <div class="grid">
+          <div class="card">
+            <div class="ico">📦</div>
+            <h3>Repositories</h3>
+            <p>HTTP Smart-Protocol clone and push, per-repo collaborators, forks, archive, and default-branch override.</p>
+          </div>
+          <div class="card">
+            <div class="ico">🌳</div>
+            <h3>Code browsing</h3>
+            <p>File tree, blob viewer, commit log, README rendering, and a ref switcher for branches and tags.</p>
+          </div>
+          <div class="card">
+            <div class="ico">🔀</div>
+            <h3>Issues &amp; PRs</h3>
+            <p>Shared numbering, markdown bodies, comments, fast-forward merge, and a color-coded diff viewer.</p>
+          </div>
+          <div class="card">
+            <div class="ico">🏷️</div>
+            <h3>Releases</h3>
+            <p>Tagged releases with attached download assets served straight from S3 or local disk.</p>
+          </div>
+          <div class="card">
+            <div class="ico">🪝</div>
+            <h3>Webhooks</h3>
+            <p>Push, issues, pull_request, release, and star events — HMAC-SHA256 signed with a per-repo delivery log.</p>
+          </div>
+          <div class="card">
+            <div class="ico">🔁</div>
+            <h3>External mirrors</h3>
+            <p>Point at an upstream URL and Tangle pulls from it automatically on a 15-minute schedule.</p>
+          </div>
+          <div class="card">
+            <div class="ico">🔐</div>
+            <h3>Auth &amp; access</h3>
+            <p>Email + password, TOTP 2FA, full session list, invite-only signup, SSH keys, and scoped access tokens.</p>
+          </div>
+          <div class="card">
+            <div class="ico">🤖</div>
+            <h3>MCP server</h3>
+            <p>32 domain tools your AI assistant can call — list repos, browse code, open pull requests, merge them.</p>
+          </div>
+          <div class="card">
+            <div class="ico">🎨</div>
+            <h3>Nord theme</h3>
+            <p>Light and dark modes with the Nord palette throughout — a sidebar that's a pleasure to look at.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- architecture -->
+    <section class="block" id="architecture">
+      <div class="wrap">
+        <div class="eyebrow">Architecture</div>
+        <h2>Two processes, one Postgres, bare repos on disk.</h2>
+        <div class="split">
+          <ul>
+            <li><span class="ck">✦</span><span><b>API process</b> — <code>bun src/server.ts</code> on :3000 handles JSON, the git Smart-HTTP wire protocol, and attachment uploads.</span></li>
+            <li><span class="ck">✦</span><span><b>Web process</b> — <code>bun src/web/serve.ts</code> on :3001 serves the SPA and proxies <code>/api/*</code> to the API.</span></li>
+            <li><span class="ck">✦</span><span><b>Caddy out front</b> — routes <code>*.git/*</code> straight to the API, everything else through the web container, with automatic Let's Encrypt.</span></li>
+            <li><span class="ck">✦</span><span><b>Bare git repos on disk</b> — standard format under <code>REPO_DIR</code>, recoverable with plain <code>git</code>.</span></li>
+            <li><span class="ck">✦</span><span><b>Postgres + pluggable storage</b> — the system of record, with blobs in S3 or local. No telemetry, no CLA.</span></li>
+          </ul>
+          <div class="diagram">         Caddy (:80 · :443)
+                 │
+       ┌─────────┴──────────┐
+   *.git/*              everything else
+       │                     │
+   API (:3000)         web (:3001) ──► /api/*
+       │
+  ┌────┴─────┬──────────────┐
+ bare git  Postgres     S3 / local
+ (REPO_DIR) (records)    (blobs)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- get started -->
+    <section class="block" id="start">
+      <div class="wrap">
+        <div class="eyebrow">Get started</div>
+        <h2>Running in a few minutes.</h2>
+        <p class="sub">Docker Compose is the recommended path — clone, set a few env vars, and bring it up. The first signup becomes the owner.</p>
+        <div class="code" style="margin-top: 32px; max-width: 720px">
+          <div class="top">
+            <span>terminal</span>
+            <button class="copy" data-copy>Copy</button>
+          </div>
+          <pre data-code><span class="c"># 1. clone</span>
+git clone https://github.com/wess/tangle &amp;&amp; cd tangle
+
+<span class="c"># 2. configure</span>
+cp .env.example .env
+<span class="c"># set DOMAIN (or :80 for HTTP), POSTGRES_PASSWORD, SECRET, RESEND_API_KEY</span>
+
+<span class="c"># 3. run</span>
+docker compose up -d
+open http://localhost   <span class="c"># first signup becomes the owner</span></pre>
+        </div>
+
+        <p class="sub" style="margin-top: 40px">Prefer to run it locally with Bun? Two processes, hot-reloaded.</p>
+        <div class="code" style="margin-top: 16px; max-width: 720px">
+          <div class="top">
+            <span>local development</span>
+            <button class="copy" data-copy>Copy</button>
+          </div>
+          <pre data-code><span class="c"># install dependencies</span>
+bun install
+
+<span class="c"># API on :3000, web on :3001</span>
+bun run dev
+
+<span class="c"># or run a single process</span>
+bun run api
+bun run web
+bun run mcp   <span class="c"># MCP server for AI assistants</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- cta band -->
+    <section class="band">
+      <div class="wrap">
+        <h2>Keep your code on your own box.</h2>
+        <p>MIT licensed — no CLA, no telemetry, no marketing emails. Small, fast, and pleasant. Built on Atlas.</p>
+        <div class="cta">
+          <a class="btn primary" href="docs.html">Read the docs</a>
+          <a class="btn ghost" href="https://github.com/wess/tangle">View on GitHub →</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap">
+        <a class="brand" href="index.html"><span class="mark">⎇</span> Tangle</a>
+        <div class="links">
+          <a href="docs.html">Docs</a>
+          <a href="../docs/QUICKSTART.md">Quickstart</a>
+          <a href="../docs/API.md">API</a>
+          <a href="https://github.com/wess/tangle">GitHub</a>
+          <a href="https://github.com/wess/atlas">Atlas</a>
+        </div>
+        <span>MIT · © 2026</span>
+      </div>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
