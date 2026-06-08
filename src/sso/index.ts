@@ -60,10 +60,14 @@ const upsertUser = async (db: Connection, claims: IdTokenClaims): Promise<Synced
   )
   if (orgTaken) throw new Error(`Username '${username}' is taken by an org`)
 
+  // First user to land — via SSO or local signup — owns the instance.
+  const anyUser = await db.one(from("users").select("id").limit(1))
+  const isFirstUser = !anyUser
+
   const password = await placeholderHash()
   const inserted = await db.execute(
     from("users")
-      .insert({ email, username, name, password, is_owner: false })
+      .insert({ email, username, name, password, is_owner: isFirstUser })
       .returning("id", "is_owner"),
   ) as Array<{ id: number; is_owner: boolean }>
   const row = inserted[0]

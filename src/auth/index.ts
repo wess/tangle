@@ -88,21 +88,26 @@ export const authRoutes = (db: Connection, secret: string) => {
       }
 
       const name = body.name?.trim()
-      const email = body.email?.trim().toLowerCase()
+      const emailInput = body.email?.trim().toLowerCase()
       const usernameInput = body.username?.trim()
       const username = usernameInput ? normalizeLogin(usernameInput) : ""
       const password = body.password
       const inviteToken = body.invite_token ?? body.inviteToken
 
-      if (!name || !email || !username || !password) {
-        return apiError(c, "validation", "name, email, username, and password are required")
+      if (!username || !password) {
+        return apiError(c, "validation", "username and password are required")
       }
-      if (!isEmail(email)) return apiError(c, "validation", "Invalid email format")
+      if (emailInput && !isEmail(emailInput)) return apiError(c, "validation", "Invalid email format")
       if (!isValidLogin(username)) {
         return apiError(c, "validation", "Username must be 1-32 chars, lowercase letters, digits, and hyphens")
       }
       if (isReservedLogin(username)) return apiError(c, "validation", "Username is reserved")
       if (password.length < 8) return apiError(c, "validation", "Password must be at least 8 characters")
+
+      // Email is optional on a private network. Synthesize a unique placeholder
+      // so the NOT NULL/UNIQUE column and email-keyed lookups keep working.
+      const email = emailInput || `${username}@tangle.local`
+      const displayName = name || username
 
       const isFirstUser = (await userCount(db)) === 0
 
@@ -140,7 +145,7 @@ export const authRoutes = (db: Connection, secret: string) => {
       const inserted = await db.execute(
         from("users")
           .insert({
-            name,
+            name: displayName,
             email,
             username,
             password: hashed,

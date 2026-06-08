@@ -21,6 +21,14 @@ const jsonReq = async (method: string, path: string, body?: unknown, signal?: Ab
     body: body !== undefined ? JSON.stringify(body) : undefined,
     signal,
   })
+  // A 401 on an authed request means the stored token is stale or expired
+  // (e.g. left over from a previous backend on the same hostname). Clear it
+  // and return to the login screen rather than letting callers .map() an
+  // error body.
+  if (res.status === 401 && token) {
+    setToken(null, null)
+    if (typeof location !== "undefined" && location.pathname !== "/login") location.href = "/login"
+  }
   return res.json()
 }
 
