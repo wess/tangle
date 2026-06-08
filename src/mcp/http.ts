@@ -55,6 +55,7 @@ const CATEGORY: Record<string, Category> = {
   "tangle.repos.set_mirror": "write",
   "tangle.users.me": "read",
   "tangle.users.search": "read",
+  "tangle.webhooks.create": "write",
   "tangle.webhooks.deliveries": "read",
   "tangle.webhooks.list": "read",
 }

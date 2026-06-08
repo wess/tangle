@@ -7,7 +7,7 @@ import { apiError } from "../util/errors.ts"
 
 const authId = (c: any) => (c.assigns.auth as { id: number }).id
 
-const VALID_EVENTS = new Set(["push", "issues", "pull_request", "release", "star", "status"])
+export const VALID_EVENTS = new Set(["push", "issues", "pull_request", "release", "star", "status"])
 const validateEvents = (events: unknown): string[] | null => {
   if (!Array.isArray(events)) return null
   if (events.length === 0) return null
@@ -29,6 +29,64 @@ const isHttpsOrLocal = (url: string): boolean => {
     if (u.protocol === "http:") return true
     return false
   } catch { return false }
+}
+
+export type WebhookRecord = {
+  id: number
+  url: string
+  content_type: string
+  events: string
+  active: boolean
+  created_at: string
+}
+
+export type CreateWebhookInput = {
+  url?: string
+  secret?: string | null
+  content_type?: string
+  contentType?: string
+  events?: unknown
+}
+
+export type CreateWebhookResult =
+  | { ok: true; webhook: WebhookRecord }
+  | { ok: false; message: string }
+
+// In-process webhook creation shared by the REST route and the MCP
+// `tangle.webhooks.create` tool. Callers are responsible for resolving
+// the repo and enforcing admin access first; this only validates the
+// payload and inserts the row. Errors come back as a discriminated
+// result so each transport can map them to its own envelope (apiError
+// for REST, a thrown Error for MCP) without this module importing either.
+export const createWebhook = async (
+  db: Connection,
+  repoId: number,
+  createdBy: number,
+  input: CreateWebhookInput,
+): Promise<CreateWebhookResult> => {
+  const url = input.url?.trim()
+  if (!url || !isHttpsOrLocal(url)) return { ok: false, message: "url must be a valid http(s) URL" }
+  const events = validateEvents(input.events)
+  if (!events) {
+    return { ok: false, message: `events must be a non-empty subset of [${[...VALID_EVENTS].join(", ")}]` }
+  }
+  const contentType = (input.content_type ?? input.contentType ?? "application/json").trim()
+  if (contentType !== "application/json" && contentType !== "application/x-www-form-urlencoded") {
+    return { ok: false, message: "content_type must be application/json or application/x-www-form-urlencoded" }
+  }
+
+  const inserted = await db.execute(
+    from("webhooks").insert({
+      repo_id: repoId,
+      url,
+      secret: input.secret?.trim() || null,
+      content_type: contentType,
+      events: JSON.stringify(events),
+      active: true,
+      created_by: createdBy,
+    }).returning("id", "url", "content_type", "events", "active", "created_at"),
+  ) as WebhookRecord[]
+  return { ok: true, webhook: inserted[0] }
 }
 
 export const webhookRoutes = (db: Connection, secret: string) => {
@@ -58,30 +116,10 @@ export const webhookRoutes = (db: Connection, secret: string) => {
       const access = await resolveRepoAccess(db, repo, userId)
       if (!access.admin) return apiError(c, "forbidden", "Repo admin access required")
 
-      const body = c.body as { url?: string; secret?: string; content_type?: string; contentType?: string; events?: unknown }
-      const url = body.url?.trim()
-      if (!url || !isHttpsOrLocal(url)) return apiError(c, "validation", "url must be a valid http(s) URL")
-      const events = validateEvents(body.events)
-      if (!events) {
-        return apiError(c, "validation", `events must be a non-empty subset of [${[...VALID_EVENTS].join(", ")}]`)
-      }
-      const contentType = (body.content_type ?? body.contentType ?? "application/json").trim()
-      if (contentType !== "application/json" && contentType !== "application/x-www-form-urlencoded") {
-        return apiError(c, "validation", "content_type must be application/json or application/x-www-form-urlencoded")
-      }
-
-      const inserted = await db.execute(
-        from("webhooks").insert({
-          repo_id: repo.id,
-          url,
-          secret: body.secret?.trim() || null,
-          content_type: contentType,
-          events: JSON.stringify(events),
-          active: true,
-          created_by: userId,
-        }).returning("id", "url", "content_type", "events", "active", "created_at"),
-      ) as Array<unknown>
-      return json(c, 201, inserted[0])
+      const body = c.body as CreateWebhookInput
+      const result = await createWebhook(db, repo.id, userId, body)
+      if (!result.ok) return apiError(c, "validation", result.message)
+      return json(c, 201, result.webhook)
     })),
 
     patch("/repos/:owner/:name/webhooks/:id", authed(async (c) => {
